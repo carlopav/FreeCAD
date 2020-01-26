@@ -4400,6 +4400,68 @@ class AddToGroup():
                     except:
                         pass
 
+class AddToContainer():
+    """The AddToContainer FreeCAD command definition"""
+
+    def GetResources(self):
+        return {'Pixmap'  : 'Draft_AddToGroup',
+                'MenuText': QtCore.QT_TRANSLATE_NOOP("Draft_AddToContainer", "Move to container..."),
+                'ToolTip': QtCore.QT_TRANSLATE_NOOP("Draft_AddToContainer", "Moves the selected object(s) to an existing container."
+                                                                            "If ''Sync Placement'' option is on, the object(s) position is automatically synchronized")}
+
+    def IsActive(self):
+        if FreeCADGui.Selection.getSelection():
+            return True
+        else:
+            return False
+
+    def Activated(self):
+        from draftutils import utils
+        self.groups = ["Ungroup"]
+        self.groups.extend(utils.get_containers_names())
+        self.labels = ["Ungroup"]
+        for g in self.groups:
+            o = FreeCAD.ActiveDocument.getObject(g)
+            if o: self.labels.append(o.Label)
+        self.ui = FreeCADGui.draftToolBar
+        self.ui.sourceCmd = self
+        self.ui.popupMenu(self.labels)
+
+    def proceed(self,labelname):
+        self.ui.sourceCmd = None
+        if labelname == "Ungroup":
+            for obj in FreeCADGui.Selection.getSelection():
+                try:
+                    Draft.ungroup(obj)
+                except:
+                    pass
+        else:
+            if labelname in self.labels:
+                i = self.labels.index(labelname)
+                g = FreeCAD.ActiveDocument.getObject(self.groups[i])
+                param = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/TreeView")
+                sync_placement = param.GetBool("SyncPlacement", False)
+                if (g.isDerivedFrom("App::DocumentObjectGroup")
+                    or Draft.getType(g) in ("Floor", "Building", "Site")):
+                    for obj in FreeCADGui.Selection.getSelection():
+                        if sync_placement:
+                            if (hasattr(obj,"getGlobalPlacement")
+                                and obj.getGlobalPlacement() != obj.Placement):
+                                param = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/TreeView")
+                                sync_placement = param.GetBool("SyncPlacement", False)
+                                new_placement = obj.getGlobalPlacement()
+                                obj.Placement = new_placement
+                        g.addObject(obj)
+                elif g.isDerivedFrom("App::Part"):
+                    for obj in FreeCADGui.Selection.getSelection():
+                        Draft.ungroup(obj)
+                        if sync_placement:
+                            if (hasattr(g,"getGlobalPlacement") 
+                                and hasattr(obj,"getGlobalPlacement")):
+                                inv_pl = g.getGlobalPlacement().inverse()
+                                new_placement = inv_pl.multiply(obj.getGlobalPlacement())
+                                obj.Placement = new_placement
+                        g.addObject(obj)
 
 class AddPoint(Modifier):
     """The Draft_AddPoint FreeCAD command definition"""
@@ -5708,6 +5770,7 @@ FreeCADGui.addCommand('Draft_ToggleContinueMode',ToggleContinueMode())
 FreeCADGui.addCommand('Draft_ApplyStyle',ApplyStyle())
 FreeCADGui.addCommand('Draft_ToggleDisplayMode',ToggleDisplayMode())
 FreeCADGui.addCommand('Draft_AddToGroup',AddToGroup())
+FreeCADGui.addCommand('Draft_AddToContainer',AddToContainer())
 FreeCADGui.addCommand('Draft_SelectGroup',SelectGroup())
 FreeCADGui.addCommand('Draft_Shape2DView',Shape2DView())
 FreeCADGui.addCommand('Draft_ShowSnapBar',ShowSnapBar())

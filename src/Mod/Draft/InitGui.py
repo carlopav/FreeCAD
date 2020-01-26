@@ -91,7 +91,7 @@ class DraftWorkbench(Workbench):
                         "Draft_PathArray", "Draft_PathLinkArray", "Draft_PointArray", "Draft_Clone",
                         "Draft_Drawing", "Draft_Mirror", "Draft_Stretch"]
         self.treecmdList = ["Draft_ApplyStyle", "Draft_ToggleDisplayMode",
-                            "Draft_AddToGroup", "Draft_SelectGroup",
+                            "Draft_AddToGroup", "Draft_AddToContainer", "Draft_SelectGroup",
                             "Draft_SelectPlane", "Draft_ShowSnapBar",
                             "Draft_ToggleGrid", "Draft_AutoGroup"]
         self.lineList = ["Draft_UndoLine", "Draft_FinishLine",

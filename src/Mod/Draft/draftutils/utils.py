@@ -573,26 +573,59 @@ def get_group_names():
 
 getGroupNames = get_group_names
 
+def get_containers_names():
+    """Return a list of names of existing containers in the document.
+
+    Returns
+    -------
+    list of str
+        A list of names of objects that are "groups" or "parts".
+        These are objects derived from `'App::DocumentObjectGroup'`
+        or are derived from `'App::Part'`
+        or which are of types `'Floor'`, `'Building'`, or `'Site'`
+        (from the Arch Workbench).
+
+        Otherwise, return an empty list.
+    """
+    containers = []
+    doc = FreeCAD.ActiveDocument
+    for obj in doc.Objects:
+        if (obj.isDerivedFrom("App::DocumentObjectGroup")
+                or obj.isDerivedFrom("App::Part")
+                or getType(obj) in ("Floor", "Building", "Site")):
+            containers.append(obj.Name)
+    return containers
+
 
 def ungroup(obj):
     """Remove the object from any group to which it belongs.
 
     A "group" is any object returned by `get_group_names`.
+    If group
 
     Parameters
     ----------
     obj : App::DocumentObject
         Any type of scripted object.
     """
-    for name in getGroupNames():
+    for name in get_containers_names():
         group = FreeCAD.ActiveDocument.getObject(name)
         if obj in group.Group:
             # The list of objects cannot be modified directly,
             # so a new list is created, this new list is modified,
             # and then it is assigned over the older list.
+            if group.isDerivedFrom("App::Part"):
+                param = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/TreeView")
+                sync_placement = param.GetBool("SyncPlacement", False)
+                if sync_placement:
+                    if hasattr(group,"getGlobalPlacement"):
+                        placement = group.getGlobalPlacement()
+                        new_placement = placement.multiply(obj.Placement)
+                        obj.Placement = new_placement
             objects = group.Group
             objects.remove(obj)
             group.Group = objects
+
 
 
 def shapify(obj):
