@@ -86,6 +86,7 @@ SET(Draft_GUI_tools
     draftguitools/gui_snapper.py
     draftguitools/gui_trackers.py
     draftguitools/gui_edit.py
+    draftguitools/gui_lineops.py
     draftguitools/README.md
 )
 
