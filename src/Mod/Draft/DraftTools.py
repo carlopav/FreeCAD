@@ -4331,38 +4331,6 @@ class WireToBSpline(Modifier):
                             self.finish()
 
 
-class SelectGroup():
-    """The SelectGroup FreeCAD command definition"""
-
-    def GetResources(self):
-        return {'Pixmap'  : 'Draft_SelectGroup',
-                'MenuText': QtCore.QT_TRANSLATE_NOOP("Draft_SelectGroup", "Select group"),
-                'ToolTip': QtCore.QT_TRANSLATE_NOOP("Draft_SelectGroup", "Selects all objects with the same parents as this group")}
-
-    def IsActive(self):
-        if FreeCADGui.Selection.getSelection():
-            return True
-        else:
-            return False
-
-    def Activated(self):
-        sellist = []
-        sel = FreeCADGui.Selection.getSelection()
-        if len(sel) == 1:
-            if sel[0].isDerivedFrom("App::DocumentObjectGroup"):
-                cts = Draft.getGroupContents(FreeCADGui.Selection.getSelection())
-                for o in cts:
-                    FreeCADGui.Selection.addSelection(o)
-                return
-        for ob in sel:
-            for child in ob.OutList:
-                FreeCADGui.Selection.addSelection(child)
-            for parent in ob.InList:
-                FreeCADGui.Selection.addSelection(parent)
-                for child in parent.OutList:
-                    FreeCADGui.Selection.addSelection(child)
-
-
 class Shape2DView(Modifier):
     """The Shape2DView FreeCAD command definition"""
 
@@ -5351,7 +5319,6 @@ FreeCADGui.addCommand('Draft_Stretch',Stretch())
 
 # context commands
 FreeCADGui.addCommand('Draft_ApplyStyle',ApplyStyle())
-FreeCADGui.addCommand('Draft_SelectGroup',SelectGroup())
 FreeCADGui.addCommand('Draft_Shape2DView',Shape2DView())
 FreeCADGui.addCommand('Draft_ShowSnapBar',ShowSnapBar())
 FreeCADGui.addCommand('Draft_ToggleGrid',ToggleGrid())
