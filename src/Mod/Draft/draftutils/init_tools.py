@@ -64,7 +64,8 @@ def get_draft_small_commands():
             "Draft_ToggleDisplayMode",
             "Draft_AddToGroup",
             "Draft_SelectGroup",
-            "Draft_Heal"]
+            "Draft_Heal",
+            "Draft_FlipDimension"]
 
 
 def get_draft_modification_commands():

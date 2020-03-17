@@ -91,6 +91,7 @@ SET(Draft_GUI_tools
     draftguitools/gui_groups.py
     draftguitools/gui_grid.py
     draftguitools/gui_heal.py
+    draftguitools/gui_dimension.py
     draftguitools/README.md
 )
 
