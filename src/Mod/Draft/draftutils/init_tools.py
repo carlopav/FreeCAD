@@ -66,7 +66,8 @@ def get_draft_small_commands():
             "Draft_SelectGroup",
             "Draft_Heal",
             "Draft_FlipDimension",
-            "Draft_Slope"]
+            "Draft_Slope",
+            "Draft_AddConstruction"]
 
 
 def get_draft_modification_commands():
