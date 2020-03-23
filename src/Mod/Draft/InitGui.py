@@ -98,11 +98,13 @@ class DraftWorkbench(FreeCADGui.Workbench):
         self.context_commands = it.get_draft_context_commands()
         self.line_commands = it.get_draft_line_commands()
         self.utility_commands = it.get_draft_utility_commands()
+        self.utility_short = it.get_draft_small_commands()
 
         # Set up toolbars
         self.appendToolbar(QT_TRANSLATE_NOOP("Draft", "Draft creation tools"), self.drawing_commands)
         self.appendToolbar(QT_TRANSLATE_NOOP("Draft", "Draft annotation tools"), self.annotation_commands)
         self.appendToolbar(QT_TRANSLATE_NOOP("Draft", "Draft modification tools"), self.modification_commands)
+        self.appendToolbar(QT_TRANSLATE_NOOP("Draft", "Draft utility tools"), self.utility_short)
 
         # Set up menus
         self.appendMenu(QT_TRANSLATE_NOOP("Draft", "&Drafting"), self.drawing_commands)
