@@ -85,6 +85,7 @@ import draftguitools.gui_heal
 import draftguitools.gui_dimension
 import draftguitools.gui_line_slope
 import draftguitools.gui_arcs
+import draftguitools.gui_arrays
 
 # import DraftFillet
 import drafttaskpanels.task_shapestring as task_shapestring
