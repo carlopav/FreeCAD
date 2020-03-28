@@ -2222,7 +2222,94 @@ def getCloneBase(obj,strict=False):
     return obj
 
 
-def mirror(objlist,p1,p2):
+def mirror(objlist, p1, p2, p3 = "default"):
+    """mirror(objlist,p1,p2,[clone]): creates a mirrored version of the given object(s)
+    along an axis that passes through the two vectors p1 and p2."""
+
+    if not objlist:
+        FreeCAD.Console.PrintError(translate("draft","No object given")+"\n")
+        return
+
+    if p1 == p2:
+        FreeCAD.Console.PrintError(translate("draft","The two points are coincident")+"\n")
+        return
+
+    if not isinstance(objlist,list):
+        objlist = [objlist]
+
+    if p3 == "default":
+        if hasattr(FreeCAD, "DraftWorkingPlane"):
+            normal = FreeCAD.DraftWorkingPlane.getNormal()
+        else:
+            normal = FreeCAD.Vector(0,0,1)
+
+    p3 = p1.add(normal)
+
+    a,b,c,d = equation_plane(p1, p2, p3)
+
+    for obj in objlist:
+        if hasattr(obj, "getGlobalPlacement"):
+            pl = obj.getGlobalPlacement()
+        elif hasattr(obj, "Placement"):
+            pl = obj.Placement
+        else:
+            pl = FreeCAD.Placement()
+
+        if hasattr(obj, "Points"):
+            nps = []
+            for p in obj.Points:
+                np = pl.multVec(p)
+                nps.append(pl.inverse().multVec(mirror_point(a, b, c, d, np)))
+
+            obj.Points = nps
+
+        elif get_type(obj) == 'Point':
+            p = pl.multVec(FreeCAD.Vector(obj.X, obj.Y, obj.Z))
+            np = pl.inverse().multVec(mirror_point(a, b, c, d, p))
+            obj.X = np.x
+            obj.Y = np.y
+            obj.Z = np.z
+        
+        elif get_type(obj) == 'Circle':
+            # does not work with parts
+            if obj.FirstAngle == obj.LastAngle:
+                p = obj.getGlobalPlacement().Base
+                np = pl.inverse().multiply(obj.Placement).multVec(mirror_point(a, b, c, d, p))
+                obj.Placement.Base = np
+        else: 
+            FreeCAD.Console.PrintWarning("Cannot mirror " + obj.Name + "\n")
+
+
+def equation_plane(p1, p2, p3):  
+      
+    a1 = p2.x - p1.x
+    b1 = p2.y - p1.y
+    c1 = p2.z - p1.z
+    a2 = p3.x - p1.x 
+    b2 = p3.y - p1.y 
+    c2 = p3.z - p1.z 
+    a = b1 * c2 - b2 * c1 
+    b = a2 * c1 - a1 * c2 
+    c = a1 * b2 - b1 * a2 
+    d = (- a * p1.x - b * p1.y - c * p1.z) 
+    
+    return a, b, c, d
+
+
+def mirror_point(a, b, c, d, p):  
+    
+    k =(-a * p.x-b * p.y-c * p.z-d)/float((a * a + b * b + c * c)) 
+    x2 = a * k + p.x 
+    y2 = b * k + p.y 
+    z2 = c * k + p.z 
+    x3 = 2 * x2-p.x 
+    y3 = 2 * y2-p.y 
+    z3 = 2 * z2-p.z
+    
+    return FreeCAD.Vector(x3, y3, z3)
+  
+  
+def part_mirror(objlist,p1,p2):
     """mirror(objlist,p1,p2,[clone]): creates a mirrored version of the given object(s)
     along an axis that passes through the two vectors p1 and p2."""
 
