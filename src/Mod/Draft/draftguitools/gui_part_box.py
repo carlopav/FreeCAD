@@ -29,13 +29,16 @@ from __future__ import print_function
 
 import FreeCAD as App
 import FreeCADGui as Gui
+import draftguitools.gui_base as gui_base
+import draftutils.gui_utils as gui_utils
+import draftutils.todo as todo
 import DraftTrackers, DraftVecUtils
 from PySide import QtCore, QtGui
 
 def QT_TRANSLATE_NOOP(ctx,txt): return txt # dummy function for QT translator
 
 
-class GuiCommand_Part_Box:
+class GuiCommand_Part_Box(gui_base.GuiCommandBase):
     """
     This Class provides the Draft command to create a Part::Box graphically
     """
@@ -180,6 +183,7 @@ class GuiCommand_Part_Box:
         
         elif len(self.points) == 3:
             # finally we have all our points. Let's create the actual cube
+            App.ActiveDocument.openTransaction("Draft_PartBox")
             cube = App.ActiveDocument.addObject("Part::Box","Cube")
             cube.Length = self.LengthValue
             cube.Width = self.WidthValue
@@ -195,13 +199,31 @@ class GuiCommand_Part_Box:
             Gui.Snapper.setGrid()
             for c in self.cubetracker:
                 c.off()
+            gui_utils.autogroup(cube)
             App.ActiveDocument.recompute()
-            
+            App.ActiveDocument.commitTransaction()
+
         self.points.append(point)
 
-    def taskbox(self):
 
-        "sets up a taskbox widget"
+    def setLength(self,d):
+
+        self.LengthValue = d
+
+
+    def setWidth(self,d):
+
+        self.WidthValue = d
+
+
+    def setHeight(self,d):
+
+        self.HeightValue = d
+
+
+    def taskbox(self):
+        """Command Gui.
+        sets up a TaskPanel widget for the Box command"""
 
         wid = QtGui.QWidget()
         ui = Gui.UiLoader()
@@ -258,20 +280,10 @@ class GuiCommand_Part_Box:
 
         return wid
 
-    def setLength(self,d):
-
-        self.LengthValue = d
-
-    def setWidth(self,d):
-
-        self.WidthValue = d
-
-    def setHeight(self,d):
-
-        self.HeightValue = d
 
     def setLengthUI(self):
-        
+        """Command Gui.
+        """
         if (len(self.points) == 1) and self.currentpoint and self.LengthValue:
             baseline = self.currentpoint.sub(self.points[0])
             baseline.normalize()
@@ -286,8 +298,10 @@ class GuiCommand_Part_Box:
                                  movecallback = self.MoveCallback,
                                  extradlg = self.taskbox())
 
-    def setWidthUI(self):
 
+    def setWidthUI(self):
+        """Command Gui.
+        """
         if (len(self.points) == 2) and self.currentpoint and self.WidthValue:
             self.normal = self.cubetracker[0].getNormal()
             if self.normal:
@@ -322,8 +336,10 @@ class GuiCommand_Part_Box:
                                  movecallback = self.MoveCallback,
                                  extradlg = self.taskbox())
 
-    def setHeightUI(self):
 
+    def setHeightUI(self):
+        """Command Gui.
+        """
         if (len(self.points) == 3) and self.HeightValue:
             cube = App.ActiveDocument.addObject("Part::Box","Cube")
             cube.Length = self.LengthValue
