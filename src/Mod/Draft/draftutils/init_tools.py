@@ -45,6 +45,10 @@ def get_draft_drawing_commands():
             "Draft_Point", "Draft_Facebinder",
             "Draft_ShapeString"]
 
+def get_draft_3d_drawing_commands():
+    """Return the 3d drawing commands list."""
+    return ["Draft_PartBox"]
+
 
 def get_draft_annotation_commands():
     """Return the annotation commands list."""
