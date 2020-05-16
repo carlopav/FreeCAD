@@ -31,16 +31,19 @@ import DraftVecUtils, DraftGeomUtils
 import Part, Draft
 import math
 
+from archobjects.base import ShapeGroup
+
 if App.GuiUp:
     import FreeCADGui as Gui
     from PySide import QtCore, QtGui
 
 
-class Wall(object):
+class Wall(ShapeGroup):
     """
     A prototype for a new wall object for the Arch Workbench
     """
     def __init__(self, obj=None):
+        super(Wall, self).__init__(obj)
         # print("runing wall object init method\n")
         if obj:
             # print("runing obj init method")
@@ -124,7 +127,7 @@ class Wall(object):
         _tip = 'Link to an edge subobject to bind the wall axis\n'\
                'Not implemented yet' # TODO: implement external axis binding
         obj.addProperty('App::PropertyLinkSubGlobal', 'AxisLink',
-                        'Geometryd', _tip)
+                        'Geometry', _tip)
 
         obj.addProperty('App::PropertyLength', 'Length',
                         'Geometry', 'Wall length',1).Length = '4 m'
@@ -191,10 +194,8 @@ class Wall(object):
                         'Wall Ends', _tip,4).LastCoreOuterAngle = '90 deg'
 
 
-    def attach(self,obj):
-
-        # print("running" + obj.Name + "attach() method\n")
-        obj.addExtension('App::GeoFeatureGroupExtensionPython', None)
+    def attach(self, obj):
+        super(Wall, self).attach(obj)
         self.set_properties(obj)
 
 
@@ -880,11 +881,3 @@ class Wall(object):
         self.Object = obj
         # obj.Proxy.Type needs to be re-setted every time the document is opened.
         obj.Proxy.Type = "Arch_Wall"
-
-
-    def __getstate__(self):
-        return
-
-
-    def __setstate__(self,_state):
-        return

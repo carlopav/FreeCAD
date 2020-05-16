@@ -31,20 +31,13 @@ import FreeCAD as App
 
 import Part
 
+from archviewproviders.view_base import ViewProviderShapeGroup
 
-class ViewProviderWall(object):
+
+class ViewProviderWall(ViewProviderShapeGroup):
     
-    def __init__(self,vobj=None):
-        self.child_node = None
-        self.mode_node = None
-        self.shape_node = None
-        self.shape_mode = None
-        if vobj:
-            vobj.Proxy = self
-            self.attach(vobj)
-        else:
-            self.ViewObject = None
-
+    def __init__(self, vobj=None):
+        super(ViewProviderWall, self).__init__(vobj)
 
     def getIcon(self):
         """Return the path to the appropriate icon.
@@ -59,86 +52,11 @@ class ViewProviderWall(object):
         return ":/icons/Arch_Wall_Tree_next.svg"
 
         
-    def attach(self, vobj):
-        vobj.addExtension('Gui::ViewProviderGeoFeatureGroupExtensionPython', None)
-        self.ViewObject = vobj
-        self.setupShapeGroup()
-
-
-    def setupShapeGroup(self):
-        vobj = self.ViewObject
-        if getattr(self, 'group_node', None) or \
-                vobj.SwitchNode.getNumChildren() < 2:
-            return
-        self.group_node = vobj.SwitchNode.getChild(0)
-        for i in range(1, vobj.SwitchNode.getNumChildren()):
-            node = coin.SoSeparator()
-            node.addChild(self.group_node)
-            node.addChild(vobj.SwitchNode.getChild(i))
-            vobj.SwitchNode.replaceChild(i,node)
-        try:
-            vobj.SwitchNode.defaultChild = 1
-        except Exception:
-            pass
-
     def getDefaultDisplayMode(self):
         return "Flat Lines"
 
-    def getDetailPath(self,subname,path,append):
-        if not subname or not getattr(self, 'group_node', None):
-            raise NotImplementedError
-        subs = Part.splitSubname(subname)
-        objs = subs[0].split('.')
-
-        vobj = self.ViewObject
-        mode = vobj.SwitchNode.whichChild.getValue()
-        if mode <= 0:
-            raise NotImplementedError
-
-        if append:
-            path.append(vobj.RootNode)
-            path.append(vobj.SwitchNode)
-
-        node = vobj.SwitchNode.getChild(mode);
-        path.append(node)
-        if mode > 0:
-            if not objs[0]:
-                path.append(node.getChild(1))
-            else:
-                path.append(node.getChild(0))
-        if not objs[0]:
-            return vobj.getDetailPath(subname,path,False)
-
-        for child in vobj.claimChildren():
-            if child.Name == objs[0]:
-                sub = Part.joinSubname('.'.join(objs[1:]),subs[1],subs[2])
-                return child.ViewObject.getDetailPath(sub,path,True)
-                
-    def getElementPicked(self,pp):
-        if not getattr(self, 'group_node', None):
-            raise NotImplementedError
-        vobj = self.ViewObject
-        path = pp.getPath()
-        if path.findNode(self.group_node) < 0:
-            raise NotImplementedError
-        for child in vobj.claimChildren():
-            if path.findNode(child.ViewObject.RootNode) < 0:
-                continue
-            return child.Name + '.' + child.ViewObject.getElementPicked(pp)
-
-
-    def onChanged(self, _vobj,prop):
-        if prop == 'DisplayMode':
-            self.setupShapeGroup()
-
-
-    def __getstate__(self):
-        return None
-
-
-    def __setstate__(self, _state):
-        return None
-
+    def onChanged(self, vobj, prop):
+        super(ViewProviderWall, self).onChanged(vobj, prop)
 
     def onDelete(self, vobj, subelements): # subelements is a tuple of strings
         """
@@ -175,7 +93,6 @@ class ViewProviderWall(object):
         # the object will be deleted
         return True
     
-
     def setupContextMenu(self, vobj, menu):
         """
         Setup context menu actions:

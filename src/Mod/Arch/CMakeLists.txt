@@ -72,12 +72,14 @@ SET(Arch_make
 
 SET(Arch_objects
     archobjects/__init__.py
+    archobjects/base.py
     archobjects/archview.py
     archobjects/wall.py
 )
 
 SET(Arch_view_providers
     archviewproviders/__init__.py
+    archviewproviders/view_base.py
     archviewproviders/view_archview.py
     archviewproviders/view_wall.py
 )
