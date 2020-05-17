@@ -31,6 +31,9 @@ import DraftVecUtils, DraftGeomUtils
 import Part, Draft
 import math
 
+from archutils import IFCutils
+import ArchIFCSchema
+
 from archobjects.base import ShapeGroup
 
 if App.GuiUp:
@@ -63,9 +66,10 @@ class Wall(ShapeGroup):
         #                'Object global Placement', 1)
 
         # Ifc Properties ----------------------------------------------------
-        obj.addProperty('App::PropertyString', 'IfcType', 
-                'IFC', 
-                'Ifc class that describe the object').IfcType = "Wall"
+        IFCutils.set_ifc_properties(obj, "IfcProduct")
+        obj.IfcType = "Wall"
+        IFCutils.setup_ifc_attributes(obj)
+        obj.PredefinedType = "STANDARD"
 
         # LEVEL Properties (not implemented yet) ----------------------------
         _tip = 'Constrain the wall base to the parent level'
@@ -114,12 +118,12 @@ class Wall(ShapeGroup):
                         'Components', _tip)
 
         # GEOMETRY Properties -----------------------------------------------
-        _tip = 'Define the X coorinate of the start point of the core axis.\n'\
+        _tip = 'Define the X coordinate of the start point of the core axis.\n'\
                'Value in millimeters'
         obj.addProperty('App::PropertyFloat', 'AxisFirstPointX', #change to BaselineStart
                         'Geometry', _tip).AxisFirstPointX = 0.0
 
-        _tip = 'Define the X coorinate of the end point of the core axis.\n'\
+        _tip = 'Define the X coordinate of the end point of the core axis.\n'\
                'Value in millimeters'
         obj.addProperty('App::PropertyFloat', 'AxisLastPointX', #change to BaselineEnd
                         'Geometry', _tip).AxisLastPointX = 4000.0

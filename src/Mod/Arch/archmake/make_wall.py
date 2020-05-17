@@ -57,7 +57,6 @@ def make_wall_from_base(baseobj):
             App.Console.PrintWarning(str(translate("Arch","Walls can only be based on Part or Mesh objects")))
     '''
 
-
 def make_wall_from_points(p1, p2, join_first=None, join_last=None,
                           width=None, height=None, align="Center",
                           name="Wall"):
