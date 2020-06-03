@@ -59,6 +59,7 @@ SET(Arch_SRCS
 SET(Arch_GUI_tools
     archguitools/__init__.py
     archguitools/gui_wall.py
+    archguitools/gui_openings.py
     archguitools/gui_archview.py
     archguitools/gui_joinwalls.py
 )
@@ -67,6 +68,9 @@ SET(Arch_make
     archmake/__init__.py
     archmake/make_arch_view.py
     archmake/make_wall.py
+    archmake/make_opening_template.py
+    archmake/make_opening_type.py
+    archmake/make_opening.py
     archmake/joinwalls.py
 )
 
@@ -74,6 +78,7 @@ SET(Arch_objects
     archobjects/__init__.py
     archobjects/base.py
     archobjects/archview.py
+    archobjects/opening.py
     archobjects/wall.py
 )
 
@@ -81,6 +86,7 @@ SET(Arch_view_providers
     archviewproviders/__init__.py
     archviewproviders/view_base.py
     archviewproviders/view_archview.py
+    archviewproviders/view_opening.py
     archviewproviders/view_wall.py
 )
 

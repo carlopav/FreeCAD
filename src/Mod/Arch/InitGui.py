@@ -56,10 +56,11 @@ class ArchWorkbench(FreeCADGui.Workbench):
         import Arch_rc
         import Arch
 
-        from archguitools import gui_archview
-
+        # experimental arch tools
         from archguitools import gui_wall
+        from archguitools import gui_openings
         from archguitools import gui_joinwalls
+        from archguitools import gui_archview
 
         # Set up command lists
         self.archtools = ["Arch_Wall", "Arch_Structure", "Arch_Rebar",# added Arch_Wall2 for testing purpouses
@@ -75,7 +76,9 @@ class ArchWorkbench(FreeCADGui.Workbench):
                           "Arch_CutPlane", "Arch_CutLine",
                           "Arch_Add", "Arch_Remove", "Arch_Survey"]
 
-        self.experimentaltools = ["Arch_Wall2","Arch_JoinWalls", "Arch_View"]
+        self.experimentaltools = ["Arch_Wall2","Arch_JoinWalls", "Separator", 
+                                  "Arch_Opening", "Arch_Door2", "Arch_Window2", "Separator",
+                                  "Arch_View"]
 
         self.utilities = ["Arch_Component", "Arch_CloneComponent",
                           "Arch_SplitMesh", "Arch_MeshToShape",
@@ -126,6 +129,9 @@ class ArchWorkbench(FreeCADGui.Workbench):
                          QT_TRANSLATE_NOOP("arch", "Utilities")],
                         self.utilities)
         self.appendMenu(QT_TRANSLATE_NOOP("arch", "&Arch"), self.archtools)
+
+        self.appendMenu(QT_TRANSLATE_NOOP("arch", "&ArchTypes"), ['Arch_Window_Template', 'Arch_Door_Template', 'Separator',
+                                                                  'Arch_Window_Type', 'Arch_Door_Type'])
 
         self.appendMenu([QT_TRANSLATE_NOOP("arch", "&Draft"),
                          QT_TRANSLATE_NOOP("arch", "Creation")],

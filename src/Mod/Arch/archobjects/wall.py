@@ -32,7 +32,6 @@ import Part, Draft
 import math
 
 from archutils import IFCutils
-import ArchIFCSchema
 
 from archobjects.base import ShapeGroup
 
@@ -103,18 +102,13 @@ class Wall(ShapeGroup):
         obj.addProperty('App::PropertyLinkListGlobal', 'Fusions',
                         'Components', _tip) # TODO: better PropertyLinkListGlobal or PropertyLinkListChild?
         
-        _tip = 'List of wall subcomponent objects.\n'\
-               'Sub-Components have to be grouped into the wall object.'
-        obj.addProperty('App::PropertyLinkListChild', 'SubComponents',
-                        'Components', _tip)
-
         _tip = 'List of objects to subtract from the wall shape'
         obj.addProperty('App::PropertyLinkListGlobal', 'Subtractions',
                         'Components', _tip)
 
-        _tip = 'List of windows inserted into the wall.\n'\
-               'Windows have to be grouped into the wall object.'
-        obj.addProperty('App::PropertyLinkListChild', 'Windows',
+        _tip = 'List of Openings inserted into the wall.\n'\
+               'Openings have to be grouped into the wall object.'
+        obj.addProperty('App::PropertyLinkListChild', 'Openings',
                         'Components', _tip)
 
         # GEOMETRY Properties -----------------------------------------------
@@ -204,7 +198,7 @@ class Wall(ShapeGroup):
 
 
     def execute(self, obj):
-        """ Compute the wall shape as boolean operations among the children objects """
+        """ Compute the wall shape as boolean operations among the component objects """
         # print("running " + obj.Name + " execute() method\n")
         # get wall base shape from BaseGeometry object
         wall_shape = None
@@ -220,10 +214,11 @@ class Wall(ShapeGroup):
 
         """
         Perform boolean operations between the base shape and 
-        Additions, Subtractions, and windows.
+        Additions, Subtractions, and Openings.
 
-        Windows have to provide a proper shape to cut the wall as a 
-        WallVoid object or (TODO: a Part::PropertyPartShape)
+        Openings have to provide a proper shape to cut the wall through
+        opening.Proxy.get_void_shape(opening) method that returns a Part Shape
+        already in the right relative position.
         """
 
         # subtract Subtractions
@@ -240,53 +235,24 @@ class Wall(ShapeGroup):
                         cut_shape.Placement = relative_placement
                         wall_shape = wall_shape.cut(cut_shape)
                     elif hasattr(o, "Shape"):
-                        # subtraction object is not inside the wall
+                        # subtraction object is not inside the wall, compute it's correct relative placement
                         global_placement = o.getGlobalPlacement()
                         relative_placement = obj.getGlobalPlacement().inverse().multiply(global_placement)
                         cut_shape = o.Shape.copy()
                         cut_shape.Placement = relative_placement
                         wall_shape = wall_shape.cut(cut_shape)
 
-        if hasattr(obj,"Windows"):
-            # objects marked as windows must have WallVoid PropertyLinkChild
-            if obj.Windows and obj.Windows != []:
-                for win in obj.Windows:
-                    # cut window void
-                    window_void = None
-                    cut_done = False
-                    if hasattr(win, "WallVoid"):
-                        if win.WallVoid:
-                            if hasattr(win.WallVoid, "Shape"):
-                                window_void = win.WallVoid
-                            if win.TypeId == 'App::Part' or win.TypeId == 'App::Link':
-                                container_placement = win.Placement
-                            else:
-                                container_placement = App.Placement()
-
-                            if window_void is not None:
-                                cut_shape = window_void.Shape.copy()
-                                cut_shape.Placement = container_placement.multiply(cut_shape.Placement)
-                                wall_shape = wall_shape.cut(cut_shape)
-                                cut_done = True
-
-                '''_compound = [wall_shape]
-                # this was used to collect Wall Additions from each window object
-                for win in obj.Windows:
-                    # collect window shapes to be added to the wall shape
-                    for o in win.Group:
-                        if o == win.WallVoid:
-                            continue
-                        elif hasattr(o, "Shape"):
-                            if win.TypeId == 'App::Part' or win.TypeId == 'App::Link':
-                                container_placement = win.Placement
-                            else:
-                                container_placement = App.Placement()
-                            add_shape = o.Shape.copy()
-                            add_shape.Placement = container_placement.multiply(o.Placement)
-                            _compound.append(add_shape)
-                
-                # collect window shapes to be added to the wall shape
-                wall_shape = Part.Compound(_compound)'''
+        if hasattr(obj,"Openings"):
+            # objects marked as Openings must be appropriate Opening objects to cut the wall
+            if obj.Openings and obj.Openings != []:
+                for opening in obj.Openings:
+                    # cut opening void
+                    void = None
+                    if hasattr(opening, "Proxy") and hasattr(opening.Proxy, "get_void_shape"):
+                        void = opening.Proxy.get_void_shape(opening)
+                        if void is not None:
+                            # void.Placement = container_placement.multiply(cut_shape.Placement) # this is not necessary anymore because Opening object provide a correct shape to cut the wall
+                            wall_shape = wall_shape.cut(void)
 
         obj.Shape = wall_shape
 
@@ -428,6 +394,7 @@ class Wall(ShapeGroup):
 
     def onChanged(self, obj, prop):
         """this method is activated when a property changes"""
+
         if prop == "Placement":
             if hasattr(obj, "Placement"): # TODO: recompute only if end is set
                 # Recompute wall joinings
@@ -481,22 +448,22 @@ class Wall(ShapeGroup):
                         openings.remove(o)
                         obj.Subtractions = openings
 
-                    elif o in obj.Windows:
-                        windows = obj.Windows
-                        windows.remove(o)
-                        obj.Windows = windows
+                    elif o in obj.Openings:
+                        openings = obj.Openings
+                        openings.remove(o)
+                        obj.Openings = openings
 
                 for o in added_objs:
-                    # if it was added, check if it is a window or ask if it has to be treated as an Opening
+                    # if it was added, check if it is an opening or ask if it has to be treated as an Opening
                     print("Adding " + o.Name + " to " + obj.Label)
                     if o == obj.BaseGeometry:
                         continue
 
                     if hasattr(o, "IfcType"):
-                        if o.IfcType == 'Window':
-                            windows = obj.Windows
-                            windows.append(o)
-                            obj.Windows = windows
+                        if o.IfcType == 'Opening Element':
+                            openings = obj.Openings
+                            openings.append(o)
+                            obj.Openings = openings
                             continue
 
                     if not o in obj.Subtractions:

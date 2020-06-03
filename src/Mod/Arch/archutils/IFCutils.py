@@ -52,8 +52,8 @@ def set_ifc_properties(obj, ifc_type="IfcProduct"):
     ----------
     ifc_type: string
         The IFC Type that have to be initialized.
-        "IfcProduct" : 
-        "IfcContext" : 
+        "IfcProduct" : The Schema used by almost every Arch Object
+        "IfcContext" : Currently, only the Project object has Context schema.
         "IfcType" : not supported yet
     """
 
@@ -64,7 +64,7 @@ def set_ifc_properties(obj, ifc_type="IfcProduct"):
     if not "IfcType" in obj.PropertiesList:
         # IfcType is set read only to be controlled only by a proper setter function
         obj.addProperty("App::PropertyEnumeration", "IfcType",
-                        "IFC", QT_TRANSLATE_NOOP("App::Property","The IFC type of this object"), 1)
+                        "IFC", QT_TRANSLATE_NOOP("App::Property","The IFC type of this object"))#, 1)
 
     if not "IfcSchema" in obj.PropertiesList:
         obj.addProperty("App::PropertyString", "IfcSchema",
@@ -156,6 +156,7 @@ def setup_ifc_attributes(obj):
     purgeUnusedIfcAttributesFromPropertiesList(ifcTypeSchema, obj)
     add_ifc_attributes(ifcTypeSchema, obj)
 
+
 def get_ifc_type_schema(obj):
     """Get the schema of the IFC type provided.
 
@@ -181,6 +182,7 @@ def get_ifc_type_schema(obj):
     if name in get_ifc_schema(obj):
         return get_ifc_schema(obj)[name]
     return None
+
 
 def get_ifc_schema(obj):
     """Get the IFC schema of all types relevant to this class.
@@ -235,6 +237,7 @@ def add_ifc_attributes(ifcTypeSchema, obj):
         add_ifc_attribute(obj, attribute)
         add_ifc_attribute_value_expressions(obj, attribute)
 
+
 def add_ifc_attribute(obj, attribute):
     """Add an IFC type's attribute to the object, within its properties.
 
@@ -273,6 +276,7 @@ def add_ifc_attribute(obj, attribute):
                         "IFC Attributes", 
                         QT_TRANSLATE_NOOP("App::Property", "Description of IFC attributes are not yet implemented"))
 
+
 def add_ifc_attribute_value_expressions(obj, attribute):
     """Add expressions for IFC attributes, so they stay accurate with the object.
 
@@ -308,14 +312,14 @@ def add_ifc_attribute_value_expressions(obj, attribute):
             obj.setExpression("OverallWidth", "Length.Value")
         elif "Width" in obj.PropertiesList:
             obj.setExpression("OverallWidth", "Width.Value")
-        elif obj.Shape and (obj.Shape.BoundBox.XLength > obj.Shape.BoundBox.YLength):
+        elif hasattr(obj, "Shape") and obj.Shape and (obj.Shape.BoundBox.XLength > obj.Shape.BoundBox.YLength):
             obj.setExpression("OverallWidth", "Shape.BoundBox.XLength")
-        elif obj.Shape:
+        elif hasattr(obj, "Shape") and obj.Shape:
             obj.setExpression("OverallWidth", "Shape.BoundBox.YLength")
     elif attribute["name"] == "OverallHeight":
         if "Height" in obj.PropertiesList:
             obj.setExpression("OverallHeight", "Height.Value")
-        else:
+        elif hasattr(obj, "Shape"):
             obj.setExpression("OverallHeight", "Shape.BoundBox.ZLength")
     elif attribute["name"] == "ElevationWithFlooring" and "Shape" in obj.PropertiesList:
         obj.setExpression("ElevationWithFlooring", "Shape.BoundBox.ZMin")
@@ -329,6 +333,7 @@ def add_ifc_attribute_value_expressions(obj, attribute):
         obj.setExpression("RefElevation", "Elevation.Value")
     elif attribute["name"] == "LongName":
         obj.LongName = obj.Label
+
 
 def set_obj_ifc_attribute_value(obj, attributeName, value):
     """Change the value of an IFC attribute within the IfcData property's json.
@@ -352,6 +357,7 @@ def set_obj_ifc_attribute_value(obj, attributeName, value):
     IfcData["attributes"] = json.dumps(IfcAttributes)
     obj.IfcData = IfcData
 
+
 def setObjIfcComplexAttributeValue(obj, attributeName, value):
     """Changes the value of the complex attribute in the IfcData property JSON.
 
@@ -369,6 +375,7 @@ def setObjIfcComplexAttributeValue(obj, attributeName, value):
     IfcData["complex_attributes"] = json.dumps(IfcAttributes)
     obj.IfcData = IfcData
 
+
 def getObjIfcComplexAttribute(obj, attributeName):
     """Get the value of the complex attribute, as stored in the IfcData JSON.
 
@@ -383,6 +390,7 @@ def getObjIfcComplexAttribute(obj, attributeName):
     """
 
     return json.loads(obj.IfcData["complex_attributes"])[attributeName]
+
 
 def purgeUnusedIfcAttributesFromPropertiesList(ifcTypeSchema, obj):
     """Remove properties representing IFC attributes if they no longer appear.
@@ -402,6 +410,7 @@ def purgeUnusedIfcAttributesFromPropertiesList(ifcTypeSchema, obj):
         ifcAttribute = getIfcAttributeSchema(ifcTypeSchema, property)
         if ifcAttribute is None or ifcAttribute["is_enum"] is True:
             obj.removeProperty(property)
+
 
 def getIfcAttributeSchema(ifcTypeSchema, name):
     """Get the schema of an IFC attribute with the given name.
