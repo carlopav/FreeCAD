@@ -33,13 +33,28 @@ using namespace App;
 PROPERTY_SOURCE(App::Annotation, App::DocumentObject)
 
 
-Annotation::Annotation() 
+Annotation::Annotation()
 {
-    ADD_PROPERTY(LabelText ,(""));
-    ADD_PROPERTY(Position,(Base::Vector3d()));
+    ADD_PROPERTY(LabelText, (""));
+    ADD_PROPERTY(Position, (Base::Vector3d()));
 }
 
 Annotation::~Annotation()
+{
+}
+
+// --------------------------------------------------
+
+PROPERTY_SOURCE(App::AnnotationLine, App::DocumentObject)
+
+
+AnnotationLine::AnnotationLine()
+{
+    ADD_PROPERTY(LabelText, (""));
+    ADD_PROPERTY(Position, (Base::Vector3d()));
+}
+
+AnnotationLine::~AnnotationLine()
 {
 }
 

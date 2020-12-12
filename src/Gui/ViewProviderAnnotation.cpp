@@ -273,6 +273,218 @@ void ViewProviderAnnotation::updateData(const App::Property* prop)
 
 // ----------------------------------------------------------------------------
 
+
+const char* ViewProviderAnnotationLine::JustificationEnums[] = { "Left","Right","Center",NULL };
+const char* ViewProviderAnnotationLine::RotationAxisEnums[] = { "X","Y","Z",NULL };
+
+PROPERTY_SOURCE(Gui::ViewProviderAnnotationLine, Gui::ViewProviderDocumentObject)
+
+
+ViewProviderAnnotationLine::ViewProviderAnnotationLine()
+{
+    ParameterGrp::handle hGrp = App::GetApplication().GetParameterGroupByPath("User parameter:BaseApp/Preferences/View");
+    unsigned long col = hGrp->GetUnsigned("AnnotationTextColor", 4294967295UL); // light grey
+    float r, g, b;
+    r = ((col >> 24) & 0xff) / 255.0; g = ((col >> 16) & 0xff) / 255.0; b = ((col >> 8) & 0xff) / 255.0;
+    ADD_PROPERTY(TextColor, (r, g, b));
+    ADD_PROPERTY(Justification, ((long)0));
+    Justification.setEnums(JustificationEnums);
+    ADD_PROPERTY(FontSize, (12));
+    ADD_PROPERTY(FontName, ("Arial"));
+    ADD_PROPERTY(LineSpacing, (1.0));
+    ADD_PROPERTY(Rotation, (0));
+    ADD_PROPERTY(RotationAxis, ((long)2));
+    RotationAxis.setEnums(RotationAxisEnums);
+
+    pFont = new SoFont();
+    pFont->ref();
+    pLabel = new SoText2();
+    pLabel->ref();
+    pLabel3d = new SoAsciiText();
+    pLabel3d->ref();
+    pColor = new SoBaseColor();
+    pColor->ref();
+    pTranslation = new SoTranslation();
+    pTranslation->ref();
+    pRotationXYZ = new SoRotationXYZ();
+    pRotationXYZ->ref();
+
+    RotationAxis.touch();
+    TextColor.touch();
+    FontSize.touch();
+    FontName.touch();
+
+    sPixmap = "Tree_Annotation";
+}
+
+ViewProviderAnnotationLine::~ViewProviderAnnotationLine()
+{
+    pFont->unref();
+    pLabel->unref();
+    pLabel3d->unref();
+    pColor->unref();
+    pTranslation->unref();
+    pRotationXYZ->unref();
+}
+
+void ViewProviderAnnotationLine::onChanged(const App::Property* prop)
+{
+    if (prop == &TextColor) {
+        const App::Color& c = TextColor.getValue();
+        pColor->rgb.setValue(c.r, c.g, c.b);
+    }
+    else if (prop == &Justification) {
+        if (Justification.getValue() == 0) {
+            pLabel->justification = SoText2::LEFT;
+            pLabel3d->justification = SoAsciiText::LEFT;
+        }
+        else if (Justification.getValue() == 1) {
+            pLabel->justification = SoText2::RIGHT;
+            pLabel3d->justification = SoAsciiText::RIGHT;
+        }
+        else if (Justification.getValue() == 2) {
+            pLabel->justification = SoText2::CENTER;
+            pLabel3d->justification = SoAsciiText::CENTER;
+        }
+    }
+    else if (prop == &FontSize) {
+        pFont->size = FontSize.getValue();
+    }
+    else if (prop == &FontName) {
+        pFont->name = FontName.getValue();
+    }
+    else if (prop == &LineSpacing) {
+        pLabel->spacing = LineSpacing.getValue();
+        pLabel3d->spacing = LineSpacing.getValue();
+    }
+    else if (prop == &RotationAxis) {
+        if (RotationAxis.getValue() == 0) {
+            pRotationXYZ->axis = SoRotationXYZ::X;
+        }
+        else if (RotationAxis.getValue() == 1) {
+            pRotationXYZ->axis = SoRotationXYZ::Y;
+        }
+        else if (RotationAxis.getValue() == 2) {
+            pRotationXYZ->axis = SoRotationXYZ::Z;
+        }
+    }
+    else if (prop == &Rotation) {
+        pRotationXYZ->angle = (Rotation.getValue() / 360)*(2 * M_PI);
+    }
+    else {
+        ViewProviderDocumentObject::onChanged(prop);
+    }
+}
+
+std::vector<std::string> ViewProviderAnnotationLine::getDisplayModes(void) const
+{
+    // add modes
+    std::vector<std::string> StrList;
+    StrList.push_back("Screen");
+    StrList.push_back("World");
+    return StrList;
+}
+
+void ViewProviderAnnotationLine::setDisplayMode(const char* ModeName)
+{
+    if (strcmp(ModeName, "Screen") == 0)
+        setDisplayMaskMode("Screen");
+    else if (strcmp(ModeName, "World") == 0)
+        setDisplayMaskMode("World");
+
+    ViewProviderDocumentObject::setDisplayMode(ModeName);
+}
+
+void ViewProviderAnnotationLine::attach(App::DocumentObject* f)
+{
+    ViewProviderDocumentObject::attach(f);
+
+    SoAnnotation* anno = new SoAnnotation();
+    SoAnnotation* anno3d = new SoAnnotation();
+
+    SoFCSelection* textsep = new SoFCSelection();
+
+    // set selection/highlight colors
+    float transparency;
+    ParameterGrp::handle hGrp = Gui::WindowParameter::getDefaultParameter()->GetGroup("View");
+    SbColor highlightColor = textsep->colorHighlight.getValue();
+    unsigned long highlight = (unsigned long)(highlightColor.getPackedValue());
+    highlight = hGrp->GetUnsigned("HighlightColor", highlight);
+    highlightColor.setPackedValue((uint32_t)highlight, transparency);
+    textsep->colorHighlight.setValue(highlightColor);
+    // Do the same with the selection color
+    SbColor selectionColor = textsep->colorSelection.getValue();
+    unsigned long selection = (unsigned long)(selectionColor.getPackedValue());
+    selection = hGrp->GetUnsigned("SelectionColor", selection);
+    selectionColor.setPackedValue((uint32_t)selection, transparency);
+    textsep->colorSelection.setValue(selectionColor);
+
+    textsep->objectName = pcObject->getNameInDocument();
+    textsep->documentName = pcObject->getDocument()->getName();
+    textsep->subElementName = "Main";
+    textsep->addChild(pTranslation);
+    textsep->addChild(pRotationXYZ);
+    textsep->addChild(pColor);
+    textsep->addChild(pFont); // causes problems
+    textsep->addChild(pLabel);
+
+    SoFCSelection* textsep3d = new SoFCSelection();
+
+    // set sel/highlight color here too
+    textsep3d->colorHighlight.setValue(highlightColor);
+    textsep3d->colorSelection.setValue(selectionColor);
+
+    textsep3d->objectName = pcObject->getNameInDocument();
+    textsep3d->documentName = pcObject->getDocument()->getName();
+    textsep3d->subElementName = "Main";
+    textsep3d->addChild(pTranslation);
+    textsep3d->addChild(pRotationXYZ);
+    textsep3d->addChild(pColor);
+    textsep3d->addChild(pFont);
+    textsep3d->addChild(pLabel3d);
+
+    anno->addChild(textsep);
+    anno3d->addChild(textsep3d);
+
+    addDisplayMaskMode(anno, "Screen");
+    addDisplayMaskMode(anno3d, "World");
+}
+
+void ViewProviderAnnotationLine::updateData(const App::Property* prop)
+{
+    if (prop->getTypeId() == App::PropertyStringList::getClassTypeId() &&
+        strcmp(prop->getName(), "LabelText") == 0) {
+        const std::vector<std::string> lines = static_cast<const App::PropertyStringList*>(prop)->getValues();
+        int index = 0;
+        pLabel->string.setNum((int)lines.size());
+        pLabel3d->string.setNum((int)lines.size());
+        for (std::vector<std::string>::const_iterator it = lines.begin(); it != lines.end(); ++it) {
+            const char* cs = it->c_str();
+            if (it->empty())
+                cs = " "; // empty lines make coin crash, we use a space instead
+#if (COIN_MAJOR_VERSION <= 3)
+            QByteArray latin1str;
+            latin1str = (QString::fromUtf8(cs)).toLatin1();
+            pLabel->string.set1Value(index, SbString(latin1str.constData()));
+            pLabel3d->string.set1Value(index, SbString(latin1str.constData()));
+#else
+            pLabel->string.set1Value(index, SbString(cs));
+            pLabel3d->string.set1Value(index, SbString(cs));
+#endif
+            index++;
+        }
+    }
+    else if (prop->getTypeId() == App::PropertyVector::getClassTypeId() &&
+        strcmp(prop->getName(), "Position") == 0) {
+        Base::Vector3d v = static_cast<const App::PropertyVector*>(prop)->getValue();
+        pTranslation->translation.setValue(v.x, v.y, v.z);
+    }
+
+    ViewProviderDocumentObject::updateData(prop);
+}
+
+// ----------------------------------------------------------------------------
+
 const char* ViewProviderAnnotationLabel::JustificationEnums[]= {"Left","Right","Center",NULL};
 
 PROPERTY_SOURCE(Gui::ViewProviderAnnotationLabel, Gui::ViewProviderDocumentObject)

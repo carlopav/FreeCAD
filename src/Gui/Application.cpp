@@ -1832,6 +1832,7 @@ void Application::initTypes(void)
     Gui::ViewProviderInventorObject             ::init();
     Gui::ViewProviderVRMLObject                 ::init();
     Gui::ViewProviderAnnotation                 ::init();
+    Gui::ViewProviderAnnotationLine             ::init();
     Gui::ViewProviderAnnotationLabel            ::init();
     Gui::ViewProviderPointMarker                ::init();
     Gui::ViewProviderMeasureDistance            ::init();

@@ -50,6 +50,24 @@ public:
     }
 };
 
+class AppExport AnnotationLine : public DocumentObject
+{
+    PROPERTY_HEADER(App::AnnotationLine);
+
+public:
+    /// Constructor
+    AnnotationLine(void);
+    virtual ~AnnotationLine();
+
+    App::PropertyStringList LabelText;
+    App::PropertyVector Position;
+
+    /// returns the type name of the ViewProvider
+    const char* getViewProviderName(void) const {
+        return "Gui::ViewProviderAnnotationLine";
+    }
+};
+
 class AppExport AnnotationLabel : public DocumentObject
 {
     PROPERTY_HEADER(App::AnnotationLabel);

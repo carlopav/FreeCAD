@@ -78,6 +78,48 @@ private:
     static const char* RotationAxisEnums[];
 };
 
+// -------------------
+
+class GuiExport ViewProviderAnnotationLine : public ViewProviderDocumentObject
+{
+    PROPERTY_HEADER(Gui::ViewProviderAnnotationLine);
+
+public:
+    /// Constructor
+    ViewProviderAnnotationLine(void);
+    virtual ~ViewProviderAnnotationLine();
+
+    // Display properties
+    App::PropertyColor          TextColor;
+    App::PropertyEnumeration    Justification;
+    App::PropertyFloat          FontSize;
+    App::PropertyFont           FontName;
+    App::PropertyFloat          LineSpacing;
+    App::PropertyAngle          Rotation;
+    App::PropertyEnumeration    RotationAxis;
+
+    void attach(App::DocumentObject *);
+    void updateData(const App::Property*);
+    std::vector<std::string> getDisplayModes(void) const;
+    void setDisplayMode(const char* ModeName);
+
+protected:
+    void onChanged(const App::Property* prop);
+
+private:
+    SoFont           * pFont;
+    SoText2          * pLabel;
+    SoAsciiText      * pLabel3d;
+    SoBaseColor      * pColor;
+    SoTranslation    * pTranslation;
+    SoRotationXYZ    * pRotationXYZ;
+
+    static const char* JustificationEnums[];
+    static const char* RotationAxisEnums[];
+};
+
+// ----------------------
+
 /**
  * This is a different implementation of an annotation object which uses an
  * SoImage node instead of an SoText2 or SoAsciiText node.

@@ -1850,6 +1850,7 @@ void Application::initTypes(void)
     App ::InventorObject            ::init();
     App ::VRMLObject                ::init();
     App ::Annotation                ::init();
+    App ::AnnotationLine            ::init();
     App ::AnnotationLabel           ::init();
     App ::MeasureDistance           ::init();
     App ::MaterialObject            ::init();
