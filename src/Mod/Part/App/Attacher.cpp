@@ -131,6 +131,7 @@ const char* AttachEngine::eMapModeStrings[]= {
     "OXZ",
     "OYZ",
     "OYX",
+    "WallToAxis",
 
     NULL};
 
@@ -899,6 +900,7 @@ AttachEngine3D::AttachEngine3D()
 
     s=cat(rtEdge);
     modeRefTypes[mmNormalToPath].push_back(s);
+    modeRefTypes[mmWallToAxis].push_back(s);
 
     s = cat(rtCurve);
     modeRefTypes[mmFrenetNB].push_back(s);
@@ -1559,6 +1561,7 @@ Base::Placement AttachEngine3D::calculateAttachedPlacement(const Base::Placement
         plm *= this->attachmentOffset;
         return plm;
     } break;
+    case mmWallToAxis:
     default:
         throwWrongMode(mmode);
     }//switch (MapMode)
