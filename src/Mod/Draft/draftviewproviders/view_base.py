@@ -389,8 +389,13 @@ class ViewProviderDraft(object):
             It is `False` otherwise.
         """
         if mode == 0 and App.GuiUp: #remove guard after splitting every viewprovider
-            Gui.runCommand("Draft_Edit")
-            return True
+            try:
+                Gui.runCommand("Draft_Edit")
+                return True
+            except:
+                _wrn = "Please load Draft Workbench to enable editing this object"
+                App.Console.PrintWarning(QT_TRANSLATE_NOOP("Draft", _wrn))
+                return False
         elif mode != 0:
             # Act like this function doesn't even exist, so the command falls back to Part (e.g. in the
             # case of an unrecognized context menu action)
